@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# https://medium.com/python-in-plain-english/build-a-chatroom-app-with-python-458fc435025a
 
 import threading
 import socket
@@ -16,7 +16,7 @@ class Server(threading.Thread):
         port (int): The port number of the listening socket.
     """
     def __init__(self, host, port):
-        super().__init__()
+        super(Server, self).__init__()
         self.connections = []
         self.host = host
         self.port = port
@@ -37,7 +37,6 @@ class Server(threading.Thread):
         print('Listening at', sock.getsockname())
 
         while True:
-
             # Accept new connection
             sc, sockname = sock.accept()
             print('Accepted a new connection from {} to {}'.format(sc.getpeername(), sc.getsockname()))
@@ -86,7 +85,7 @@ class ServerSocket(threading.Thread):
         server (Server): The parent thread.
     """
     def __init__(self, sc, sockname, server):
-        super().__init__()
+        super(ServerSocket, self).__init__()
         self.sc = sc
         self.sockname = sockname
         self.server = server
@@ -106,7 +105,7 @@ class ServerSocket(threading.Thread):
                 # Client has closed the socket, exit the thread
                 print('{} has closed the connection'.format(self.sockname))
                 self.sc.close()
-                server.remove_connection(self)
+                self.server.remove_connection(self)
                 return
     
     def send(self, message):
@@ -119,7 +118,7 @@ class ServerSocket(threading.Thread):
         self.sc.sendall(message.encode('ascii'))
 
 
-def exit(server):
+def exit_server(server):
     """
     Allows the server administrator to shut down the server.
     Typing 'q' in the command line will close all active connections and exit the application.
@@ -134,9 +133,9 @@ def exit(server):
             os._exit(0)
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description='Chatroom Server')
-    parser.add_argument('host', help='Interface the server listens at')
+    parser.add_argument('-host', type=str, default='127.0.0.1', help='Interface the server listens at')
     parser.add_argument('-p', metavar='PORT', type=int, default=1060,
                         help='TCP port (default 1060)')
     args = parser.parse_args()
@@ -145,5 +144,9 @@ if __name__ == '__main__':
     server = Server(args.host, args.p)
     server.start()
 
-    exit = threading.Thread(target = exit, args = (server,))
+    exit = threading.Thread(target=exit_server, args=(server,))
     exit.start()
+
+
+if __name__ == '__main__':
+    main()
